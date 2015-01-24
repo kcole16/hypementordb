@@ -51,6 +51,7 @@ def authenticate_linkedin(code, client_code):
     'grant_type': 'authorization_code'
     }
     r = requests.post(url, data=data)
+    print r.text
     access_token = r.json()['access_token']
     return access_token
 
