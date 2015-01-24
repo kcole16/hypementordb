@@ -1,29 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-
   </head>
-
-  <body>
+  <body class="{% block body_class %}{% endblock body_class %}">
     <center>
+      <div class="logo" style="border-bottom:1px solid #f1f1f1;">
+          <img src="{{ url_for('static', filename='img/hypementor.png') }}" style="width:150px;height:90px;">
+      </div><br>
       <div class="container-fluid center-block">
-      <div class="center-block">
-        <div class="center-block main">
-          <div class="pure-g-r">
-            <div class="pure-u-1" style="padding-top:45px;text-align: center; font-size: 150%; margin-top: 2em;">
-                <a href="/get_user/?client_code={{client_code}}"><button class="btn btn-lg" style="background-color:white;border-color:gray;color:#007bb6;font-family:arial;font-size:18px;"><i class="fa fa-linkedin-square fa-1x"></i>  <strong>Sign up</strong> with <strong>LinkedIn</strong></button></a>
-            </div>
-        </div>
+        <div class="center-block">
+          <div class="center-block main">
+            <a href="/get_user/?client_code={{client_code}}"><button class="btn btn-lg" style="background-color:white;border-color:gray;color:#007bb6;font-family:arial;font-size:18px;"><i class="fa fa-linkedin-square fa-1x"></i>  <strong>Sign up</strong> with <strong>LinkedIn</strong></button></a></div>
         </div>
       </div>
-    </div>
-  </center>
-
-
+    </center>
   </body>
-
 </html>
