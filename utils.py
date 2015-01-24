@@ -63,6 +63,7 @@ def parse_profile(profile):
     education = [school.string for school in xml.find_all('school-name')]
     location = xml.find('location').find('name').string
     headline = xml.find('headline').string
+    picture_url = xml.find('picture-url').string
     position_list = xml.find_all('position')
     positions = [{'title':position.find('title').string.strip(), 
         'company':position.find('company').find('name').string.strip()} for position in position_list]
@@ -70,20 +71,21 @@ def parse_profile(profile):
     user_details = {'linkedin_id':linkedin_id, 
         'first_name':first_name, 'education':education,
         'last_name':last_name, 'email':email, 'location':location, 
-        'headline':headline, 'positions':positions, 'industry':industry}
+        'headline':headline, 'positions':positions, 'industry':industry, 'picture_url':picture_url}
     return user_details
 
 def save_linkedin_profile(access_token, client_code):
     user_status = False
     db = connect_db('MONGOLAB_URI', 'APP_NAME')
     client_short_name = db.clients.find_one({'client_code':client_code})['short_name']
-    url = 'https://api.linkedin.com/v1/people/~:(id,headline,first-name,last-name,email-address,educations,location:(name),industry,positions)'
+    url = 'https://api.linkedin.com/v1/people/~:(id,headline,first-name,last-name,email-address,educations,location:(name),industry,positions,picture-url)'
     headers = {
         'Host':'api.linkedin.com',
         'Connection':'Keep-Alive',
         'Authorization': 'Bearer %s' % access_token
     }
     r = requests.get(url, headers=headers)
+    print r.text
     if r.ok:
         user_details = parse_profile(r.text)
         if check_user_exists(user_details['linkedin_id'], client_short_name) == False:
