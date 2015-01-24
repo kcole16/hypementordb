@@ -29,6 +29,7 @@ def getenv(key):
 def connect_db(url, app_name):
     client = pymongo.MongoClient(getenv(url))
     db = client[getenv(app_name)]
+    print "YAYAYAYA"
     return db
 
 def check_user_exists(linkedin_id, client_short_name):
@@ -51,7 +52,6 @@ def authenticate_linkedin(code, client_code):
     'grant_type': 'authorization_code'
     }
     r = requests.post(url, data=data)
-    print r.text
     access_token = r.json()['access_token']
     return access_token
 
@@ -65,10 +65,8 @@ def parse_profile(profile):
     location = xml.find('location').find('name').string
     headline = xml.find('headline').string
     position_list = xml.find_all('position')
-    print position_list
     positions = [{'title':position.find('title').string.strip(), 
         'company':position.find('company').find('name').string.strip()} for position in position_list]
-    print positions
     industry = xml.find('industry').string
     user_details = {'linkedin_id':linkedin_id, 
         'first_name':first_name, 'education':education,
@@ -87,7 +85,6 @@ def save_linkedin_profile(access_token, client_code):
         'Authorization': 'Bearer %s' % access_token
     }
     r = requests.get(url, headers=headers)
-    print r.text
     if r.ok:
         user_details = parse_profile(r.text)
         if check_user_exists(user_details['linkedin_id'], client_short_name) == False:
