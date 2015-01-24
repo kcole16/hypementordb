@@ -29,7 +29,6 @@ def getenv(key):
 def connect_db(url, app_name):
     client = pymongo.MongoClient(getenv(url))
     db = client[getenv(app_name)]
-    print "YAYAYAYA"
     return db
 
 def check_user_exists(linkedin_id, client_short_name):
@@ -77,9 +76,7 @@ def parse_profile(profile):
 def save_linkedin_profile(access_token, client_code):
     user_status = False
     db = connect_db('MONGOLAB_URI', 'APP_NAME')
-    print "db: %s" % db
-    client_short_name = db.client.find_one({'client_code':client_code})['short_name']
-    print "client_short: %s" % client_short_name
+    client_short_name = db.clients.find_one({'client_code':client_code})['short_name']
     url = 'https://api.linkedin.com/v1/people/~:(id,headline,first-name,last-name,email-address,educations,location:(name),industry,positions)'
     headers = {
         'Host':'api.linkedin.com',
@@ -88,14 +85,10 @@ def save_linkedin_profile(access_token, client_code):
     }
     r = requests.get(url, headers=headers)
     if r.ok:
-        print "r.ok"
         user_details = parse_profile(r.text)
-        print "user_details: %s" % user_details
         if check_user_exists(user_details['linkedin_id'], client_short_name) == False:
-            print "user_check"
             db_insert = "db.%s.insert(user_details)" % client_short_name
             eval(db_insert)
-            print "evaled"
         else:
             user_status = True
     else:
