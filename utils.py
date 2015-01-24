@@ -70,7 +70,7 @@ def parse_profile(profile):
     user_details = {'linkedin_id':linkedin_id, 
         'first_name':first_name, 'education':education,
         'last_name':last_name, 'email':email, 'location':location, 
-        'headline':headline, 'positions':positions}
+        'headline':headline, 'positions':positions, 'industry':industry}
     return user_details
 
 def save_linkedin_profile(access_token, client_code):
