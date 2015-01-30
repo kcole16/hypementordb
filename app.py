@@ -6,7 +6,6 @@ import os
 from uuid import uuid4
 from werkzeug.routing import BaseConverter
 from bson.json_util import dumps
-from flask.ext.jsonpify import jsonify
 
 
 app = Flask(__name__)
