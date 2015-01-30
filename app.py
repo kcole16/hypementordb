@@ -5,6 +5,8 @@ import json
 import os
 from uuid import uuid4
 from werkzeug.routing import BaseConverter
+from bson.json_util import dumps
+from flask.ext.jsonpify import jsonify
 
 
 app = Flask(__name__)
@@ -42,6 +44,17 @@ def oauth(client_code):
 		return render_template('error.html')
 	else:
 		return render_template('success.html')
+
+@app.route('/mentors/<regex(".+"):client_code>/', methods=['POST', 'GET'])
+def mentors(client_code):
+	industry = request.args['industry']
+	db = connect_db('MONGOLAB_URI', 'APP_NAME')
+	client_short_name = db.clients.find_one({'client_code':client_code})['short_name']
+	mentors = dumps(eval("db.%s.find({'industry':'%s'})" % (client_short_name, industry)))
+	print mentors
+
+	return jsonify(mentors=mentors)
+
 
 """Run server"""
 if __name__ == '__main__':

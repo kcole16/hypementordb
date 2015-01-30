@@ -54,20 +54,38 @@ def authenticate_linkedin(code, client_code):
     access_token = r.json()['access_token']
     return access_token
 
+def try_attribute(xml, attribute):
+    try:
+        attribute = xml.find(attribute).string
+    except AttributeError:
+        attribute = None
+    return attribute
+
 def parse_profile(profile):
     xml = BeautifulSoup(profile)
-    linkedin_id = xml.find('id').string
-    first_name = xml.find('first-name').string
-    last_name = xml.find('last-name').string
-    email = xml.find('email-address').string
-    education = [school.string for school in xml.find_all('school-name')]
-    location = xml.find('location').find('name').string
-    headline = xml.find('headline').string
-    picture_url = xml.find('picture-url').string
-    position_list = xml.find_all('position')
-    positions = [{'title':position.find('title').string.strip(), 
-        'company':position.find('company').find('name').string.strip()} for position in position_list]
-    industry = xml.find('industry').string
+    linkedin_id = try_attribute(xml, 'id')
+    first_name = try_attribute(xml, 'first-name')
+    last_name = try_attribute(xml, 'last-name')
+    email = try_attribute(xml, 'email-address')
+    headline = try_attribute(xml, 'headline')
+    picture_url = try_attribute(xml, 'picture-url')
+    industry = try_attribute(xml, 'industry')
+
+    try:
+        education = [school.string for school in xml.find_all('school-name')]
+    except AttributeError:
+        education = []
+    try:
+        location = xml.find('location').find('name').string
+    except AttributeError:
+        location = None
+    try:
+        position_list = xml.find_all('position')        
+        positions = [{'title':position.find('title').string.strip(), 
+            'company':position.find('company').find('name').string.strip()} for position in position_list]
+    except AttributeError:
+        positions = []
+        
     user_details = {'linkedin_id':linkedin_id, 
         'first_name':first_name, 'education':education,
         'last_name':last_name, 'email':email, 'location':location, 
@@ -85,7 +103,6 @@ def save_linkedin_profile(access_token, client_code):
         'Authorization': 'Bearer %s' % access_token
     }
     r = requests.get(url, headers=headers)
-    print r.text
     if r.ok:
         user_details = parse_profile(r.text)
         if check_user_exists(user_details['linkedin_id'], client_short_name) == False:
