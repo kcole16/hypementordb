@@ -9,6 +9,7 @@ import pymongo
 import requests
 from bs4 import BeautifulSoup
 from bson.objectid import ObjectId
+from elasticsearch import Elasticsearch
 
 # from bson import json_util
 
@@ -30,6 +31,14 @@ def connect_db(url, app_name):
     client = pymongo.MongoClient(getenv(url))
     db = client[getenv(app_name)]
     return db
+
+def create_es_index(index_name, es):
+    settings = {
+    "settings" : {
+        "number_of_shards" : 1,
+        "number_of_replicas" : 1
+    }}
+    es.indices.create(index=index_name, body=settings)
 
 def check_user_exists(linkedin_id, client_short_name):
     db = connect_db('MONGOLAB_URI', 'APP_NAME')
@@ -105,9 +114,18 @@ def save_linkedin_profile(access_token, client_code):
     r = requests.get(url, headers=headers)
     if r.ok:
         user_details = parse_profile(r.text)
-        if check_user_exists(user_details['linkedin_id'], client_short_name) == False:
+        linkedin_id = user_details['linkedin_id']
+        if check_user_exists(linkedin_id, client_short_name) == False:
             db_insert = "db.%s.insert(user_details)" % client_short_name
             eval(db_insert)
+            es = Elasticsearch([getenv('BONSAI_URL')])
+            del user_details['_id']
+            if es.indices.exists(client_short_name):
+                res = es.index(index=client_short_name, doc_type='member', id=linkedin_id, body=user_details)
+            else:
+                create_es_index(client_short_name, es)
+                res = es.index(index=client_short_name, doc_type='member', id=linkedin_id, body=user_details)
+            es.indices.refresh(index=client_short_name)
         else:
             user_status = True
     else:
