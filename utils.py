@@ -81,10 +81,6 @@ def parse_profile(profile):
     industry = try_attribute(xml, 'industry')
 
     try:
-        education = [school.string for school in xml.find_all('school-name')]
-    except AttributeError:
-        education = []
-    try:
         location = xml.find('location').find('name').string
     except AttributeError:
         location = None
@@ -95,17 +91,25 @@ def parse_profile(profile):
     except AttributeError:
         positions = []
         
-    user_details = {'linkedin_id':linkedin_id, 
-        'first_name':first_name, 'education':education,
-        'last_name':last_name, 'email':email, 'location':location, 
-        'headline':headline, 'positions':positions, 'industry':industry, 'picture_url':picture_url}
+    user_details = {
+        'linkedin_id':linkedin_id, 
+        'first_name':first_name,
+        'last_name':last_name, 
+        'email':email, 
+        'location':location, 
+        'headline':headline, 
+        'positions':positions, 
+        'industry':industry, 
+        'picture_url':picture_url
+        }
+        
     return user_details
 
 def save_linkedin_profile(access_token, client_code):
     user_status = False
     db = connect_db('MONGOLAB_URI', 'APP_NAME')
     client_short_name = db.clients.find_one({'client_code':client_code})['short_name']
-    url = 'https://api.linkedin.com/v1/people/~:(id,headline,first-name,last-name,email-address,educations,location:(name),industry,positions,picture-url)'
+    url = 'https://api.linkedin.com/v1/people/~:(id,headline,first-name,last-name,email-address,location:(name),industry,positions,picture-url)'
     headers = {
         'Host':'api.linkedin.com',
         'Connection':'Keep-Alive',
