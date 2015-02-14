@@ -42,7 +42,8 @@ def oauth(client_code):
 	if user_status:
 		return render_template('error.html')
 	else:
-		return render_template('success.html')
+		SITE_URL = getenv('SITE_URL')
+		return render_template('success.html', SITE_URL=SITE_URL, client_code=client_code)
 
 @app.route('/mentors/<regex(".+"):client_code>/', methods=['POST', 'GET'])
 def mentors(client_code):

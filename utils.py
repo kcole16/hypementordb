@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from bson.objectid import ObjectId
 from elasticsearch import Elasticsearch
 
+
 # from bson import json_util
 
 def getenv(key):
@@ -102,7 +103,7 @@ def parse_profile(profile):
         'industry':industry, 
         'picture_url':picture_url
         }
-        
+
     return user_details
 
 def save_linkedin_profile(access_token, client_code):
@@ -130,9 +131,11 @@ def save_linkedin_profile(access_token, client_code):
                 create_es_index(client_short_name, es)
                 res = es.index(index=client_short_name, doc_type='member', id=linkedin_id, body=user_details)
             es.indices.refresh(index=client_short_name)
+            db.authorized.insert({'linkedin_id':linkedin_id, 'client_code':client_code})
         else:
             user_status = True
     else:
         user_status = "Error"
     return user_status
+
     
