@@ -19,19 +19,24 @@ app.url_map.converters['regex'] = RegexConverter
 
 """UI Routes"""
 
-@app.route('/details/<regex(".+"):client_code>/', methods=['GET'])
-def details(client_code):
-	return render_template('index.html', client_code=client_code)
+@app.route('/', methods=['GET'])
+def home():
+	return render_template('index2.html')
+
+@app.route('/details/c6846271b6174a0b9831ea1d34e4665c/', methods=['GET'])
+def details():
+	return render_template('index2.html')
 
 @app.route('/get_user/', methods=['GET'])
 def get_user():
 	client_id = getenv('LINKEDIN_CLIENT_ID')
 	scope = 'r_fullprofile r_emailaddress'
 	state = str(uuid4()).replace('-','')
-	client_code = request.args['client_code']
+	client_code = 'c6846271b6174a0b9831ea1d34e4665c'
 	redirect_uri = '%s/oauth/%s/' % (str(getenv('PATH_URL')), client_code)
 	url = 'https://www.linkedin.com/uas/oauth2/authorization?response_type=code&client_id=%s&scope=%s&state=%s&redirect_uri=%s' % (client_id, scope, state, redirect_uri)
 	return redirect(url)
+
 
 @app.route('/oauth/<regex(".+"):client_code>/', methods=['GET'])
 def oauth(client_code):
