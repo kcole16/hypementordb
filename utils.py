@@ -2,7 +2,8 @@
 import os 
 import sys
 import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
+import time
 
 #dependencies
 import pymongo
@@ -11,6 +12,7 @@ from bs4 import BeautifulSoup
 from bson.objectid import ObjectId
 from elasticsearch import Elasticsearch
 
+from algoliasearch import algoliasearch
 
 # from bson import json_util
 
@@ -49,6 +51,32 @@ def check_user_exists(linkedin_id, client_short_name):
         user_exists = True
     return user_exists
 
+def check_industry(industry):
+    industry_exists = False
+    db = connect_db('MONGOLAB_URI', 'APP_NAME')
+    check_industry = db.industry.find_one({'name':industry})
+    if check_industry != None:
+        industry_exists = True
+    else:
+        db.industry.insert({'name': industry})
+    return industry_exists
+
+def check_company(company):
+    company_exists = False
+    db = connect_db('MONGOLAB_URI', 'APP_NAME')
+    check_company = db.company.find_one({'name':company})
+    if check_company != None:
+        company_exists = True
+    else:
+        db.company.insert({'name': company})
+    return company_exists
+
+def add_to_algolia(index, data):
+    data['objectID'] = str(time.time()).split('.')[0]
+    client = algoliasearch.Client(getenv("ALGOLIA_ID"), getenv("ALGOLIA_SECRET"))
+    index = client.init_index(index)
+    res = index.save_object(data)
+
 def authenticate_linkedin(code, client_code):
     url = 'https://www.linkedin.com/uas/oauth2/accessToken'
     client_id = getenv('LINKEDIN_CLIENT_ID')
@@ -81,6 +109,11 @@ def parse_profile(profile):
     picture_url = try_attribute(xml, 'picture-url')
     industry = try_attribute(xml, 'industry')
 
+    if industry is not None:
+        industry_exists = check_industry(industry)
+        if not industry_exists:
+            name = {'name': industry}
+            add_to_algolia('INDUSTRIES', name)
     try:
         location = xml.find('location').find('name').string
     except AttributeError:
@@ -89,7 +122,11 @@ def parse_profile(profile):
         position_list = xml.find_all('position')        
         positions = [{'title':position.find('title').string.strip(), 
             'company':position.find('company').find('name').string.strip()} for position in position_list]
-    except AttributeError:
+        company_exists = check_company(positions[0]['company'])
+        if not company_exists:
+            name = {'name': positions[0]['company']}
+            add_to_algolia('COMPANIES', name)
+    except (AttributeError, IndexError):
         positions = []
         
     user_details = {
@@ -125,6 +162,7 @@ def save_linkedin_profile(access_token, client_code):
             eval(db_insert)
             es = Elasticsearch([getenv('BONSAI_URL')])
             del user_details['_id']
+            add_to_algolia('MENTORS', user_details)
             if es.indices.exists(client_short_name):
                 res = es.index(index=client_short_name, doc_type='member', id=linkedin_id, body=user_details)
             else:
